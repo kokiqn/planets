@@ -9,42 +9,48 @@ export default class Application extends EventEmitter {
   }
 
   constructor() {
-    super();
+    super(); 
 
-    this._load();
-    this._startLoading();
-    this._stopLoading();
-
-    const box = document.createElement("div");
-    box.classList.add("box");
-    box.innerHTML = this._create({
-      name: "Placeholder",
-      terrain: "placeholder",
-      population: 0,
-    });
-
-    document.body.querySelector(".main").appendChild(box);
+    this._loading = document.querySelector('progress');
+    this._startLoading()
+    this._load()
+      .then(data => this._create(data))
+      .then(() => this._stopLoading());
 
     this.emit(Application.events.READY);
   }
 
   async _load() {
-    async function getPlanets() {
-      const urls = Array.from({ length: 7 },
-        (v, i) => `https://swapi.boom.dev/api/planets?page=${i + 1}`);
+    const urls = Array.from({
+        length: 7
+      },
+      (v, i) => `https://swapi.boom.dev/api/planets?page=${i + 1}`);
 
-      const promises = urls.map(url => fetch(url)
-        .then(res => res.json())
-        .then(data => data.results));
-        
-      const planetData = (await Promise.all(promises)).flat();
-      console.log(`Results for ${planetData.length} planets downloaded...`);
-      console.log('Results:', planetData);
-    }
-    getPlanets()
+    const promises = urls.map(url => fetch(url)
+      .then(res => res.json())
+      .then(data => data.results));
+
+    const planetData = await Promise.all(promises)
+    return planetData.flat();
+  }
+  
+    //here should be moved the rendering of the boxes, I suppose by establishing a connection with _render()
+  _create(data) {
+    data.forEach(({ name, terrain, population }) => {
+      const box = document.createElement("div");
+      box.classList.add("box");
+      
+      box.innerHTML = this._render({
+        name,
+        terrain,
+        population,
+      });
+      
+      document.body.querySelector(".main").appendChild(box);
+    })
   }
 
-  _create({ name, terrain, population }) {
+  _render({ name, terrain, population, }) {
     return `
 <article class="media">
   <div class="media-left">
@@ -65,8 +71,14 @@ export default class Application extends EventEmitter {
     `;
   }
 
-  _startLoading() {}
+  // we can leave these two alone for now
+  _startLoading() {
+    this._loading.style.visibility = 'visible';
+  }
 
-  _stopLoading() {}
-  
+  _stopLoading() {
+    this._loading.style.visibility = 'hidden';
+  }
+
+
 }
