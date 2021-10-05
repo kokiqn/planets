@@ -22,9 +22,11 @@ export default class Application extends EventEmitter {
 
   async _load() {
     const urls = Array.from({
-        length: 7
+        length: 6
       },
       (v, i) => `https://swapi.boom.dev/api/planets?page=${i + 1}`);
+
+      urls[0] = 'https://swapi.boom.dev/api/planets';
 
     const promises = urls.map(url => fetch(url)
       .then(res => res.json())
