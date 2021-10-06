@@ -21,19 +21,23 @@ export default class Application extends EventEmitter {
   }
 
   async _load() {
-    const urls = Array.from({
-        length: 6
-      },
-      (v, i) => `https://swapi.boom.dev/api/planets?page=${i + 1}`);
+    let planets = [];
 
-      urls[0] = 'https://swapi.boom.dev/api/planets';
+      let url = 'https://swapi.boom.dev/api/planets';
+    
+      while (url) {
+        const res = await fetch(url);
+        const data = await res.json();
+    
+        for (const item of data.results) {
+          planets.push(item);
+        }
 
-    const promises = urls.map(url => fetch(url)
-      .then(res => res.json())
-      .then(data => data.results));
-
-    const planetData = await Promise.all(promises)
-    return planetData.flat();
+        url = data.next;
+      }
+   
+    planets = await Promise.all(planets);
+    return planets.flat();
   }
   
     //here should be moved the rendering of the boxes, I suppose by establishing a connection with _render()
